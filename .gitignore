@@ -132,3 +132,6 @@ dmypy.json
 .tar.gz
 .gz
 .smi
+
+#Images
+.png

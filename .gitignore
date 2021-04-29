@@ -135,3 +135,9 @@ dmypy.json
 
 #Images
 .png
+
+.log
+
+input/train/
+input/test/
+input/inchi-preprocess/

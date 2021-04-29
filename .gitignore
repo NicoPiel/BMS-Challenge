@@ -137,8 +137,8 @@ dmypy.json
 *.png
 
 */train_labels.csv
-*/sample_submission.csv
-*/submission.csv
+sample_submission.csv
+submission.csv
 
 .log
 

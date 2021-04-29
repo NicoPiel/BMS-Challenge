@@ -30,7 +30,7 @@ dependencies:
   - cloudpickle=1.6.0=py_0
   - colorama=0.4.4=pyh9f0ad1d_0
   - cryptography=3.4.7=py38hd7da0ea_0
-  - cudatoolkit=11.2.2=h933977f_8
+  - cudatoolkit=10.1
   - cycler=0.10.0=py_2
   - cytoolz=0.11.0=py38h294d835_3
   - dask-core=2021.4.1=pyhd8ed1ab_0

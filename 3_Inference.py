@@ -8,7 +8,7 @@
 # In[6]:
 
 
-get_ipython().run_line_magic('load_ext', 'autotime')
+#get_ipython().run_line_magic('load_ext', 'autotime')
 
 
 # In[7]:

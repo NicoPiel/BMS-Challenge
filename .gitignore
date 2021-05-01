@@ -140,6 +140,8 @@ train_labels.csv
 sample_submission.csv
 submission.csv
 
+*.zip
+
 .log
 
 input/train/

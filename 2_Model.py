@@ -6,7 +6,7 @@
 # In[1]:
 
 
-#get_ipython().run_line_magic('load_ext', 'autotime')
+get_ipython().run_line_magic('load_ext', 'autotime')
 
 
 # ## Directory Settings
@@ -230,16 +230,19 @@ import timm
 import warnings 
 warnings.filterwarnings('ignore')
 
-#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.device('cpu')
-torch.backends.cudnn.benchmark = True
-torch.cuda.init()
-LOGGER.info(f'CUDA available: {torch.cuda.is_available()}')
-LOGGER.info(f'Number of available devices: {torch.cuda.device_count()}')
-LOGGER.info(f'Device names: ')
+cuda_available = torch.cuda.is_available()
 
-for i in np.arange(torch.cuda.device_count()):
-    LOGGER.info(torch.cuda.get_device_name(torch.cuda.current_device()))
+device = torch.device('cuda' if cuda_available else 'cpu')
+
+if (cuda_available):
+    torch.backends.cudnn.benchmark = True
+    torch.cuda.init()
+    LOGGER.info(f'CUDA available: {cuda_available}')
+    LOGGER.info(f'Number of available devices: {torch.cuda.device_count()}')
+    LOGGER.info(f'Device names: ')
+
+    for i in np.arange(torch.cuda.device_count()):
+        LOGGER.info(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 # ## Utils

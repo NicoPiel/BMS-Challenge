@@ -6,7 +6,7 @@
 # In[1]:
 
 
-#get_ipython().run_line_magic('load_ext', 'autotime')
+get_ipython().run_line_magic('load_ext', 'autotime')
 
 
 # ## Directory Settings
@@ -132,10 +132,10 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 # CFG
 # ====================================================
 class CFG:
-    debug=True
+    debug=False
     max_len=275
     print_freq=1000
-    num_workers=12
+    num_workers=os.cpu_count()*2
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
@@ -160,6 +160,8 @@ class CFG:
     n_fold=5
     trn_fold=[0] # [0, 1, 2, 3, 4]
     train=True
+    
+print(f'Using {os.cpu_count()*2} workers.')
 
 
 # In[6]:
@@ -235,14 +237,13 @@ cuda_available = torch.cuda.is_available()
 device = torch.device('cuda' if cuda_available else 'cpu')
 
 if (cuda_available):
-    torch.backends.cudnn.benchmark = True
     torch.cuda.init()
-    LOGGER.info(f'CUDA available: {cuda_available}')
-    LOGGER.info(f'Number of available devices: {torch.cuda.device_count()}')
-    LOGGER.info(f'Device names: ')
+    print(f'CUDA available: {cuda_available}')
+    print(f'Number of available devices: {torch.cuda.device_count()}')
+    print(f'Device names: ')
 
     for i in np.arange(torch.cuda.device_count()):
-        LOGGER.info(torch.cuda.get_device_name(torch.cuda.current_device()))
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 # ## Utils
@@ -253,11 +254,15 @@ if (cuda_available):
 # ====================================================
 # Utils
 # ====================================================
+
+score_df = 0
+
 def get_score(y_true, y_pred):
     scores = []
     for true, pred in zip(y_true, y_pred):
         score = Levenshtein.distance(true, pred)
         scores.append(score)
+    score_df = pd.DataFrame.from_dict({'score': scores})
     avg_score = np.mean(scores)
     return avg_score
 
@@ -835,6 +840,18 @@ def train_loop(folds, fold):
         
         # scoring
         score = get_score(valid_labels, text_preds)
+        
+        image_keys = pd.read_csv('train_labels')
+        
+        LOGGER.info('Writing output csv')
+        
+        scores_out = pd.DataFrame({
+            'image_id': train['image_id'],
+            'actual_inchi': train['InChI'],
+            'predicted_inchi': text_preds,
+            'score': score_df['score']
+        })
+        
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)

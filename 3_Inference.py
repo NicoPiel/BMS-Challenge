@@ -5,15 +5,16 @@
 
 # ## Data Loading
 
-# In[1]:
+# In[6]:
 
 
-#get_ipython().run_line_magic('load_ext', 'autotime')
+get_ipython().run_line_magic('load_ext', 'autotime')
 
 
-# In[2]:
+# In[7]:
 
 
+import os
 import numpy as np
 import pandas as pd
 import torch
@@ -32,69 +33,8 @@ print(f'test.shape: {test.shape}')
 display(test.head())
 
 
-# In[3]:
+# In[8]:
 
-
-class Tokenizer(object):
-    
-    def __init__(self):
-        self.stoi = {}
-        self.itos = {}
-
-    def __len__(self):
-        return len(self.stoi)
-    
-    def fit_on_texts(self, texts):
-        vocab = set()
-        for text in texts:
-            vocab.update(text.split(' '))
-        vocab = sorted(vocab)
-        vocab.append('<sos>')
-        vocab.append('<eos>')
-        vocab.append('<pad>')
-        for i, s in enumerate(vocab):
-            self.stoi[s] = i
-        self.itos = {item[1]: item[0] for item in self.stoi.items()}
-        
-    def text_to_sequence(self, text):
-        sequence = []
-        sequence.append(self.stoi['<sos>'])
-        for s in text.split(' '):
-            sequence.append(self.stoi[s])
-        sequence.append(self.stoi['<eos>'])
-        return sequence
-    
-    def texts_to_sequences(self, texts):
-        sequences = []
-        for text in texts:
-            sequence = self.text_to_sequence(text)
-            sequences.append(sequence)
-        return sequences
-
-    def sequence_to_text(self, sequence):
-        return ''.join(list(map(lambda i: self.itos[i], sequence)))
-    
-    def sequences_to_texts(self, sequences):
-        texts = []
-        for sequence in sequences:
-            text = self.sequence_to_text(sequence)
-            texts.append(text)
-        return texts
-    
-    def predict_caption(self, sequence):
-        caption = ''
-        for i in sequence:
-            if i == self.stoi['<eos>'] or i == self.stoi['<pad>']:
-                break
-            caption += self.itos[i]
-        return caption
-    
-    def predict_captions(self, sequences):
-        captions = []
-        for sequence in sequences:
-            caption = self.predict_caption(sequence)
-            captions.append(caption)
-        return captions
 
 tokenizer = torch.load('input/inchi-preprocess/tokenizer.pth', pickle_module=dill)
 print(f"tokenizer.stoi: {tokenizer.stoi}")
@@ -102,17 +42,17 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[4]:
+# In[9]:
 
 
 # ====================================================
 # CFG
 # ====================================================
 class CFG:
-    debug=True
+    debug=False
     max_len=275
     print_freq=1000
-    num_workers=12
+    num_workers=os.cpu_count()*2
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
@@ -137,9 +77,11 @@ class CFG:
     n_fold=5
     trn_fold=[0] # [0, 1, 2, 3, 4]
     train=True
+    
+print(f'Using {os.cpu_count()*2} workers.')
 
 
-# In[5]:
+# In[10]:
 
 
 if CFG.debug:
@@ -148,7 +90,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[6]:
+# In[11]:
 
 
 # ====================================================
@@ -207,24 +149,24 @@ cuda_available = torch.cuda.is_available()
 device = torch.device('cuda' if cuda_available else 'cpu')
 
 if (cuda_available):
-    torch.backends.cudnn.benchmark = True
     torch.cuda.init()
-    LOGGER.info(f'CUDA available: {cuda_available}')
-    LOGGER.info(f'Number of available devices: {torch.cuda.device_count()}')
-    LOGGER.info(f'Device names: ')
+    print(f'CUDA available: {cuda_available}')
+    print(f'Number of available devices: {torch.cuda.device_count()}')
+    print(f'Device names: ')
 
     for i in np.arange(torch.cuda.device_count()):
-        LOGGER.info(torch.cuda.get_device_name(torch.cuda.current_device()))
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 # ## Utils
 
-# In[7]:
+# In[12]:
 
 
 # ====================================================
 # Utils
 # ====================================================
+
 def get_score(y_true, y_pred):
     scores = []
     for true, pred in zip(y_true, y_pred):
@@ -260,7 +202,7 @@ def seed_torch(seed=42):
 seed_torch(seed=CFG.seed)
 
 
-# In[8]:
+# In[13]:
 
 
 from matplotlib import pyplot as plt
@@ -275,7 +217,7 @@ plt.show()
 
 # ## Dataset
 
-# In[9]:
+# In[14]:
 
 
 from matplotlib import pyplot as plt
@@ -293,7 +235,7 @@ for i in range(20):
 plt.show()
 
 
-# In[10]:
+# In[15]:
 
 
 # ====================================================
@@ -313,7 +255,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.file_paths[idx]
         image = cv2.imread(file_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32)
         h, w, _ = image.shape
         if h > w:
             image = self.fix_transform(image=image)['image']
@@ -325,7 +267,7 @@ class TestDataset(Dataset):
 
 # ## Transforms
 
-# In[11]:
+# In[16]:
 
 
 def get_transforms(*, data):
@@ -353,7 +295,7 @@ def get_transforms(*, data):
 
 # ## MODEL
 
-# In[12]:
+# In[17]:
 
 
 class Encoder(nn.Module):
@@ -365,13 +307,14 @@ class Encoder(nn.Module):
         self.cnn.fc = nn.Identity()
 
     def forward(self, x):
+        LOGGER.info('Encoder - Forwarding ..')
         bs = x.size(0)
         features = self.cnn(x)
         features = features.permute(0, 2, 3, 1)
         return features
 
 
-# In[13]:
+# In[18]:
 
 
 class Attention(nn.Module):
@@ -457,6 +400,7 @@ class DecoderWithAttention(nn.Module):
         :param encoded_captions: transformed sequence from character to integer
         :param caption_lengths: length of transformed sequence
         """
+        LOGGER.info('Decoder - Forwarding ..')
         batch_size = encoder_out.size(0)
         encoder_dim = encoder_out.size(-1)
         vocab_size = self.vocab_size
@@ -488,6 +432,7 @@ class DecoderWithAttention(nn.Module):
         return predictions, encoded_captions, decode_lengths, alphas, sort_ind
     
     def predict(self, encoder_out, decode_lengths, tokenizer):
+        LOGGER.info('Decoder - Predicting ..')
         batch_size = encoder_out.size(0)
         encoder_dim = encoder_out.size(-1)
         vocab_size = self.vocab_size
@@ -517,7 +462,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Inference
 
-# In[14]:
+# In[19]:
 
 
 def inference(test_loader, encoder, decoder, tokenizer, device):
@@ -526,6 +471,7 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
     text_preds = []
     tk0 = tqdm(test_loader, total=len(test_loader))
     for images in tk0:
+        
         images = images.to(device)
         with torch.no_grad():
             features = encoder(images)
@@ -537,39 +483,33 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
     return text_preds
 
 
-# In[15]:
+# In[ ]:
 
 
-with open('train.log') as f:
-    s = f.read()
-print(s)
+if __name__ == '__main__':
 
+    states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'), pickle_module=dill)
 
-# In[16]:
+    encoder = Encoder(CFG.model_name, pretrained=False)
+    encoder.load_state_dict(states['encoder'])
+    encoder.to(device)
 
+    decoder = DecoderWithAttention(attention_dim=CFG.attention_dim,
+                                   embed_dim=CFG.embed_dim,
+                                   decoder_dim=CFG.decoder_dim,
+                                   vocab_size=len(tokenizer),
+                                   dropout=CFG.dropout,
+                                   device=device)
+    decoder.load_state_dict(states['decoder'])
+    decoder.to(device)
 
-states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'))
+    del states; gc.collect()
 
-encoder = Encoder(CFG.model_name, pretrained=False)
-encoder.load_state_dict(states['encoder'])
-encoder.to(device)
+    test_dataset = TestDataset(test, transform=get_transforms(data='valid'))
+    test_loader = DataLoader(test_dataset, batch_size=512, shuffle=False, num_workers=CFG.num_workers)
+    predictions = inference(test_loader, encoder, decoder, tokenizer, device)
 
-decoder = DecoderWithAttention(attention_dim=CFG.attention_dim,
-                               embed_dim=CFG.embed_dim,
-                               decoder_dim=CFG.decoder_dim,
-                               vocab_size=len(tokenizer),
-                               dropout=CFG.dropout,
-                               device=device)
-decoder.load_state_dict(states['decoder'])
-decoder.to(device)
-
-del states; gc.collect()
-
-test_dataset = TestDataset(test, transform=get_transforms(data='valid'))
-test_loader = DataLoader(test_dataset, batch_size=512, shuffle=False, num_workers=CFG.num_workers)
-predictions = inference(test_loader, encoder, decoder, tokenizer, device)
-
-del test_loader, encoder, decoder, tokenizer; gc.collect()
+    del test_loader, encoder, decoder, tokenizer; gc.collect()
 
 
 # In[ ]:

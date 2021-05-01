@@ -141,8 +141,8 @@ sample_submission.csv
 submission.csv
 
 *.zip
-
-.log
+*.pth
+*.log
 
 input/train/
 input/test/

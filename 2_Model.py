@@ -852,6 +852,8 @@ def train_loop(folds, fold):
             'score': score_df['score']
         })
         
+        scores_out.to_csv('output.csv', index=False)
+        
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
             encoder_scheduler.step(score)

@@ -548,7 +548,7 @@ print(s)
 # In[16]:
 
 
-states = torch.load(f'input/inchi-resnet-lstm-with-attention-starter/{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'))
+states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'))
 
 encoder = Encoder(CFG.model_name, pretrained=False)
 encoder.load_state_dict(states['encoder'])

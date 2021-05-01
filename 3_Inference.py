@@ -109,7 +109,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 # CFG
 # ====================================================
 class CFG:
-    debug=False
+    debug=True
     max_len=275
     print_freq=1000
     num_workers=12

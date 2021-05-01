@@ -3,13 +3,13 @@
 
 # # Preprocessing
 
-# In[20]:
+# In[3]:
 
 
 #get_ipython().run_line_magic('load_ext', 'autotime')
 
 
-# In[21]:
+# In[4]:
 
 
 # ====================================================
@@ -34,7 +34,7 @@ if not os.path.isfile('train_labels.csv') or not os.path.isfile('sample_submissi
     raise Exception('Please unzip the contents of this archive and place the train_labels.csv and sample_submission.csv file in the root directory! https://www.kaggle.com/c/bms-molecular-translation')
 
 
-# In[22]:
+# In[5]:
 
 
 # ====================================================
@@ -154,7 +154,7 @@ class Tokenizer(object):
 
 # # Main
 
-# In[23]:
+# In[6]:
 
 
 # ====================================================
@@ -187,7 +187,7 @@ def main():
     print('Saved preprocessed train.json')
 
 
-# In[ ]:
+# In[7]:
 
 
 if __name__ == '__main__':

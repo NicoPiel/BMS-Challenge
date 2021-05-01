@@ -132,7 +132,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 # CFG
 # ====================================================
 class CFG:
-    debug=False
+    debug=True
     max_len=275
     print_freq=1000
     num_workers=12
@@ -167,12 +167,12 @@ class CFG:
 
 if CFG.debug:
     CFG.epochs = 1
-    train = train.sample(n=200, random_state=CFG.seed).reset_index(drop=True)
+    train = train[:100000]
 
 
 # ## Library
 
-# In[7]:
+# In[8]:
 
 
 # ====================================================
@@ -230,9 +230,16 @@ import timm
 import warnings 
 warnings.filterwarnings('ignore')
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 torch.backends.cudnn.benchmark = True
-print(torch.cuda.is_available())
+torch.cuda.init()
+LOGGER.info(f'CUDA available: {torch.cuda.is_available()}')
+LOGGER.info(f'Number of available devices: {torch.cuda.device_count()}')
+LOGGER.info(f'Device names: ')
+
+for i in np.arange(torch.cuda.device_count()):
+    LOGGER.info(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 # ## Utils
@@ -618,7 +625,8 @@ def train_fn(train_loader, encoder, decoder, criterion,
     start = end = time.time()
     global_step = 0
     LOGGER.info('Enumerating train loader ..')
-    for step, (images, labels, label_lengths) in tqdm(enumerate(train_loader)):
+    for step, (images, labels, label_lengths) in enumerate(train_loader):
+        LOGGER.info(f'Step: {step}')
         LOGGER.info('Training - Measuring data loading time ..')
         # measure data loading time
         data_time.update(time.time() - end)
@@ -682,7 +690,8 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
     decoder.eval()
     text_preds = []
     start = end = time.time()
-    for step, (images) in tqdm(enumerate(valid_loader)):
+    for step, (images) in enumerate(valid_loader):
+        LOGGER.info(f'Step: {step}')
         # measure data loading time
         LOGGER.info('Evaluation - loading data ..')
         data_time.update(time.time() - end)
@@ -799,7 +808,8 @@ def train_loop(folds, fold):
     
     LOGGER.info('Starting loop ..')
     
-    for epoch in tqdm(range(CFG.epochs)):
+    for epoch in range(CFG.epochs):
+        LOGGER.info(f'Epoch: {epoch}')
         
         start_time = time.time()
         

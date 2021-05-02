@@ -174,7 +174,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[8]:
+# In[7]:
 
 
 # ====================================================
@@ -255,16 +255,13 @@ if (cuda_available):
 # Utils
 # ====================================================
 
-score_df = 0
-
 def get_score(y_true, y_pred):
     scores = []
     for true, pred in zip(y_true, y_pred):
         score = Levenshtein.distance(true, pred)
         scores.append(score)
-    score_df = pd.DataFrame.from_dict({'score': scores})
     avg_score = np.mean(scores)
-    return avg_score
+    return avg_score, scores
 
 
 def init_logger(log_file=OUTPUT_DIR+'train.log'):
@@ -731,7 +728,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[17]:
+# In[18]:
 
 
 # ====================================================
@@ -839,20 +836,31 @@ def train_loop(folds, fold):
         LOGGER.info('Scoring ..')
         
         # scoring
-        score = get_score(valid_labels, text_preds)
+        score, scores = get_score(valid_labels, text_preds)
+        LOGGER.info(f'Average levenshtein distance: {score}')
         
         image_keys = pd.read_csv('train_labels')
         
         LOGGER.info('Writing output csv')
         
-        scores_out = pd.DataFrame({
-            'image_id': train['image_id'],
-            'actual_inchi': train['InChI'],
+        LOGGER.info(f'Num scores: {len(scores)}')
+        LOGGER.info(f'Num preds: {len(text_preds)}')
+        
+        scores_computed = pd.DataFrame({
             'predicted_inchi': text_preds,
-            'score': score_df['score']
+            'score': scores
         })
         
-        scores_out.to_csv('output.csv', index=False)
+        LOGGER.info(f"Num image ids: {len(train['image_id'])}")
+        LOGGER.info(f"Num actual inchis: {len(train['InChI'])}")
+        
+        scores_out = pd.DataFrame({
+            'image_id': train['image_id'],
+            'actual_inchi': train['InChI']
+        }).concat([scores_out, scores_computed], axis=1)
+        
+        
+        scores_out.sort_values('score', ascending=False).to_csv('output.csv', index=False)
         
         
         if isinstance(encoder_scheduler, ReduceLROnPlateau):
@@ -890,7 +898,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[18]:
+# In[19]:
 
 
 # ====================================================

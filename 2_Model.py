@@ -169,7 +169,7 @@ print(f'Using {os.cpu_count()} workers.')
 
 if CFG.debug:
     CFG.epochs = 1
-    train = train[:200]
+    train = train[:100000]
 
 
 # ## Library

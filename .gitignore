@@ -139,6 +139,7 @@ dmypy.json
 train_labels.csv
 sample_submission.csv
 submission.csv
+output.csv
 
 *.zip
 *.pth

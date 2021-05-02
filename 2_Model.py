@@ -839,7 +839,7 @@ def train_loop(folds, fold):
         score, scores = get_score(valid_labels, text_preds)
         LOGGER.info(f'Average levenshtein distance: {score}')
         
-        image_keys = pd.read_csv('train_labels')
+        image_keys = pd.read_csv('train_labels.csv')
         
         LOGGER.info('Writing output csv')
         

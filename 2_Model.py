@@ -854,11 +854,12 @@ def train_loop(folds, fold):
         LOGGER.info(f"Num image ids: {len(train['image_id'])}")
         LOGGER.info(f"Num actual inchis: {len(train['InChI'])}")
         
-        scores_out = pd.DataFrame({
+        scores_actual = pd.DataFrame({
             'image_id': train['image_id'],
             'actual_inchi': train['InChI']
-        }).concat([scores_out, scores_computed], axis=1)
+        })
         
+        scores_out = pd.concat([scores_actual, scores_computed], axis=1)
         
         scores_out.sort_values('score', ascending=False).to_csv('output.csv', index=False)
         

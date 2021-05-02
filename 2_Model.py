@@ -728,7 +728,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[18]:
+# In[17]:
 
 
 # ====================================================
@@ -767,6 +767,8 @@ def train_loop(folds, fold):
                               num_workers=CFG.num_workers,
                               pin_memory=True, 
                               drop_last=False)
+    
+    display(valid_folds)
     
     # ====================================================
     # scheduler 
@@ -851,12 +853,12 @@ def train_loop(folds, fold):
             'score': scores
         })
         
-        LOGGER.info(f"Num image ids: {len(train['image_id'])}")
-        LOGGER.info(f"Num actual inchis: {len(train['InChI'])}")
+        LOGGER.info(f"Num image ids: {len(valid_folds['image_id'])}")
+        LOGGER.info(f"Num actual inchis: {len(valid_folds['InChI'])}")
         
         scores_actual = pd.DataFrame({
-            'image_id': train['image_id'],
-            'actual_inchi': train['InChI']
+            'image_id': valid_folds['image_id'],
+            'actual_inchi': valid_folds['InChI']
         })
         
         scores_out = pd.concat([scores_actual, scores_computed], axis=1)
@@ -899,7 +901,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[19]:
+# In[18]:
 
 
 # ====================================================

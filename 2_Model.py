@@ -132,10 +132,10 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 # CFG
 # ====================================================
 class CFG:
-    debug=False
+    debug=True
     max_len=275
     print_freq=1000
-    num_workers=os.cpu_count()*2
+    num_workers=os.cpu_count()
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
@@ -161,7 +161,7 @@ class CFG:
     trn_fold=[0] # [0, 1, 2, 3, 4]
     train=True
     
-print(f'Using {os.cpu_count()*2} workers.')
+print(f'Using {os.cpu_count()} workers.')
 
 
 # In[6]:
@@ -169,7 +169,7 @@ print(f'Using {os.cpu_count()*2} workers.')
 
 if CFG.debug:
     CFG.epochs = 1
-    train = train[:100000]
+    train = train[:200]
 
 
 # ## Library

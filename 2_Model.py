@@ -135,7 +135,7 @@ class CFG:
     debug=False
     max_len=275
     print_freq=1000
-    num_workers=os.cpu_count()
+    num_workers=16 if os.cpu_count() >= 16 else os.cpu_count()
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
@@ -161,7 +161,7 @@ class CFG:
     trn_fold=[0] # [0, 1, 2, 3, 4]
     train=True
     
-print(f'Using {os.cpu_count()} workers.')
+print(f'Using {CFG.num_workers} workers.')
 
 
 # In[6]:

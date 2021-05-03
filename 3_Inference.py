@@ -487,6 +487,11 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
 
 
 if __name__ == '__main__':
+    
+    LOGGER.info(f"Using CUDA: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        LOGGER.info(f"Using {torch.cuda.device_count()} devices")
+    LOGGER.info(f"Using {CFG.num_workers} workers")
 
     states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'), pickle_module=dill)
 

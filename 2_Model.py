@@ -912,6 +912,11 @@ def main():
     """
     Prepare: 1.train  2.folds
     """
+    
+    LOGGER.info(f"Using CUDA: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        LOGGER.info(f"Using {torch.cuda.device_count()} devices")
+    LOGGER.info(f"Using {CFG.num_workers} workers")
 
     if CFG.train:
         # train

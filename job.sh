@@ -1,6 +1,9 @@
 #!/bin/bash
 #SBATCH --tasks=16
 #SBATCH --mem=12G
+#SBATCH --time=12:00:00
+#SBATCH --output=job.%j.out
+#SBATCH --error=job.%j.err
 
 # load modules
 module load cuda/10.2

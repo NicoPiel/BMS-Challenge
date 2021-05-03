@@ -31,7 +31,7 @@ if not os.path.exists('input/inchi-resnet-lstm-with-attention-starter'):
     os.makedirs('input/inchi-resnet-lstm-with-attention-starter')
     
 if not os.path.isfile('train_labels.csv') or not os.path.isfile('sample_submission.csv'):
-    raise Exception('Please unzip the contents of this archive and place the train_labels.csv and sample_submission.csv file in the root directory! https://www.kaggle.com/c/bms-molecular-translation')
+    raise Exception('Please unzip this archive and place the .csv files in the root directory and the train and test folders under /input! https://www.kaggle.com/c/bms-molecular-translation')
 
 
 # In[5]:

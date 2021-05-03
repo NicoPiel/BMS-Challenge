@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --tasks=16
-#SBATCH --mem=60G
+#SBATCH --mem=128G
 #SBATCH --time=12:00:00
 #SBATCH --output=job.%j.out
 #SBATCH --error=job.%j.err

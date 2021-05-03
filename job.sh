@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --partition=gpu
 #SBATCH --tasks=16
 #SBATCH --mem=128G
 #SBATCH --time=12:00:00

@@ -1,17 +1,13 @@
 #!/bin/bash
 #SBATCH --partition=gpu
 #SBATCH --tasks=16
-#SBATCH --mem=128G
+#SBATCH --mem=120G
 #SBATCH --time=12:00:00
 #SBATCH --output=job.%j.out
 #SBATCH --error=job.%j.err
 
 # load modules
-module load cuda/10.2
+module load python3 gcc/7.3.0 cuda
 
-# start preprocessing
-ipython ./1_Preprocess.py
-# compile and train model
-ipython ./2_Model.py
-# start inference
-ipython ./3_Inference.py
+# start the model
+ipython ./1_Preprocess.py && ipython ./2_Model.py && ipython ./3_Inference.py

@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --partition=gpu
 #SBATCH --tasks=16
-#SBATCH --mem=120G
-#SBATCH --time=12:00:00
+#SBATCH --mem=320G
+#SBATCH --time=24:00:00
 #SBATCH --output=job.%j.out
 #SBATCH --error=job.%j.err
 

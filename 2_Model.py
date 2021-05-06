@@ -240,10 +240,7 @@ if (cuda_available):
     torch.cuda.init()
     print(f'CUDA available: {cuda_available}')
     print(f'Number of available devices: {torch.cuda.device_count()}')
-    print(f'Device names: ')
-
-    for i in np.arange(torch.cuda.device_count()):
-        print(torch.cuda.get_device_name(torch.cuda.current_device()))
+    print(f'Using device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
 
 
 # ## Utils
@@ -914,8 +911,6 @@ def main():
     """
     
     LOGGER.info(f"Using CUDA: {torch.cuda.is_available()}")
-    if torch.cuda.is_available():
-        LOGGER.info(f"Using {torch.cuda.device_count()} devices")
     LOGGER.info(f"Using {CFG.num_workers} workers")
 
     if CFG.train:

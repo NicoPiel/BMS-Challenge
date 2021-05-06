@@ -5,13 +5,13 @@
 
 # ## Data Loading
 
-# In[6]:
+# In[1]:
 
 
 #get_ipython().run_line_magic('load_ext', 'autotime')
 
 
-# In[7]:
+# In[2]:
 
 
 import os
@@ -33,7 +33,7 @@ print(f'test.shape: {test.shape}')
 display(test.head())
 
 
-# In[8]:
+# In[3]:
 
 
 tokenizer = torch.load('input/inchi-preprocess/tokenizer.pth', pickle_module=dill)
@@ -42,7 +42,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[9]:
+# In[4]:
 
 
 # ====================================================
@@ -81,7 +81,7 @@ class CFG:
 print(f'Using {CFG.num_workers} workers.')
 
 
-# In[10]:
+# In[5]:
 
 
 if CFG.debug:
@@ -90,7 +90,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[11]:
+# In[6]:
 
 
 # ====================================================
@@ -152,15 +152,12 @@ if (cuda_available):
     torch.cuda.init()
     print(f'CUDA available: {cuda_available}')
     print(f'Number of available devices: {torch.cuda.device_count()}')
-    print(f'Device names: ')
-
-    for i in np.arange(torch.cuda.device_count()):
-        print(torch.cuda.get_device_name(torch.cuda.current_device()))
+    print(f'Using device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
 
 
 # ## Utils
 
-# In[12]:
+# In[7]:
 
 
 # ====================================================
@@ -202,7 +199,7 @@ def seed_torch(seed=42):
 seed_torch(seed=CFG.seed)
 
 
-# In[13]:
+# In[8]:
 
 
 from matplotlib import pyplot as plt
@@ -217,7 +214,7 @@ plt.show()
 
 # ## Dataset
 
-# In[14]:
+# In[9]:
 
 
 from matplotlib import pyplot as plt
@@ -235,7 +232,7 @@ for i in range(20):
 plt.show()
 
 
-# In[15]:
+# In[10]:
 
 
 # ====================================================
@@ -255,7 +252,7 @@ class TestDataset(Dataset):
     def __getitem__(self, idx):
         file_path = self.file_paths[idx]
         image = cv2.imread(file_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(np.float32)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         h, w, _ = image.shape
         if h > w:
             image = self.fix_transform(image=image)['image']
@@ -267,7 +264,7 @@ class TestDataset(Dataset):
 
 # ## Transforms
 
-# In[16]:
+# In[11]:
 
 
 def get_transforms(*, data):
@@ -295,7 +292,7 @@ def get_transforms(*, data):
 
 # ## MODEL
 
-# In[17]:
+# In[12]:
 
 
 class Encoder(nn.Module):
@@ -314,7 +311,7 @@ class Encoder(nn.Module):
         return features
 
 
-# In[18]:
+# In[13]:
 
 
 class Attention(nn.Module):
@@ -462,7 +459,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Inference
 
-# In[19]:
+# In[14]:
 
 
 def inference(test_loader, encoder, decoder, tokenizer, device):
@@ -489,8 +486,6 @@ def inference(test_loader, encoder, decoder, tokenizer, device):
 if __name__ == '__main__':
     
     LOGGER.info(f"Using CUDA: {torch.cuda.is_available()}")
-    if torch.cuda.is_available():
-        LOGGER.info(f"Using {torch.cuda.device_count()} devices")
     LOGGER.info(f"Using {CFG.num_workers} workers")
 
     states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'), pickle_module=dill)

@@ -3,7 +3,7 @@
 
 # # Model
 
-# In[5]:
+# In[1]:
 
 
 #%load_ext autotime
@@ -11,7 +11,7 @@
 
 # ## Directory Settings
 
-# In[6]:
+# In[2]:
 
 
 # ====================================================
@@ -34,7 +34,7 @@ if os.path.isfile('train.log'):
 
 # ## Data Loading
 
-# In[7]:
+# In[3]:
 
 
 import numpy as np
@@ -55,7 +55,7 @@ print(f'train.shape: {train.shape}')
 display(train.head())
 
 
-# In[ ]:
+# In[4]:
 
 
 class Tokenizer(object):
@@ -125,7 +125,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[ ]:
+# In[5]:
 
 
 # ====================================================
@@ -164,7 +164,7 @@ class CFG:
 print(f'Using {CFG.num_workers} workers.')
 
 
-# In[ ]:
+# In[6]:
 
 
 if CFG.debug:
@@ -174,7 +174,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[ ]:
+# In[7]:
 
 
 # ====================================================
@@ -212,12 +212,13 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam, SGD, AdaBound
+from torch.optim import Adam, SGD
 import torchvision.models as models
 from torch.nn.parameter import Parameter
 from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR, ReduceLROnPlateau
+from adabound import AdaBound
 
 from albumentations import (
     Compose, OneOf, Normalize, Resize, RandomResizedCrop, RandomCrop, HorizontalFlip, VerticalFlip, 
@@ -245,7 +246,7 @@ if (cuda_available):
 
 # ## Utils
 
-# In[ ]:
+# In[8]:
 
 
 # ====================================================
@@ -289,7 +290,7 @@ seed_torch(seed=CFG.seed)
 
 # ## CV Split
 
-# In[ ]:
+# In[9]:
 
 
 folds = train.copy()
@@ -302,7 +303,7 @@ print(folds.groupby(['fold']).size())
 
 # ## Dataset
 
-# In[ ]:
+# In[10]:
 
 
 # ====================================================
@@ -354,7 +355,7 @@ class TestDataset(Dataset):
         return image
 
 
-# In[ ]:
+# In[11]:
 
 
 def bms_collate(batch):
@@ -369,7 +370,7 @@ def bms_collate(batch):
 
 # ## Transforms
 
-# In[ ]:
+# In[12]:
 
 
 def get_transforms(*, data):
@@ -395,7 +396,7 @@ def get_transforms(*, data):
         ])
 
 
-# In[ ]:
+# In[13]:
 
 
 from matplotlib import pyplot as plt
@@ -412,7 +413,7 @@ for i in range(1):
 
 # ## MODEL
 
-# In[ ]:
+# In[14]:
 
 
 class Encoder(nn.Module):
@@ -430,7 +431,7 @@ class Encoder(nn.Module):
         return features
 
 
-# In[ ]:
+# In[15]:
 
 
 class Attention(nn.Module):
@@ -576,7 +577,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Helper functions
 
-# In[ ]:
+# In[16]:
 
 
 # ====================================================
@@ -725,7 +726,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[ ]:
+# In[17]:
 
 
 # ====================================================
@@ -904,7 +905,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[ ]:
+# In[18]:
 
 
 # ====================================================
@@ -927,7 +928,7 @@ def main():
                 train_loop(folds, fold)
 
 
-# In[ ]:
+# In[19]:
 
 
 if __name__ == '__main__':

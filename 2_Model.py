@@ -212,7 +212,7 @@ from PIL import Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.optim import Adam, SGD
+from torch.optim import Adam, SGD, AdaBound
 import torchvision.models as models
 from torch.nn.parameter import Parameter
 from torch.utils.data import DataLoader, Dataset
@@ -787,7 +787,7 @@ def train_loop(folds, fold):
     
     encoder = Encoder(CFG.model_name, pretrained=True)
     encoder.to(device)
-    encoder_optimizer = Adam(encoder.parameters(), lr=CFG.encoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
+    encoder_optimizer = AdaBound(encoder.parameters(), lr=CFG.encoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
     encoder_scheduler = get_scheduler(encoder_optimizer)
     
     LOGGER.info('Creating decoder ..')
@@ -799,7 +799,7 @@ def train_loop(folds, fold):
                                    dropout=CFG.dropout,
                                    device=device)
     decoder.to(device)
-    decoder_optimizer = Adam(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
+    decoder_optimizer = AdaBound(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
     decoder_scheduler = get_scheduler(decoder_optimizer)
 
     # ====================================================

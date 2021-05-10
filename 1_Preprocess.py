@@ -6,7 +6,7 @@
 # In[3]:
 
 
-#get_ipython().run_line_magic('load_ext', 'autotime')
+#%load_ext autotime
 
 
 # In[4]:

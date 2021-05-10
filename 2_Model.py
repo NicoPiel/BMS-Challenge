@@ -3,15 +3,15 @@
 
 # # Model
 
-# In[1]:
+# In[5]:
 
 
-#get_ipython().run_line_magic('load_ext', 'autotime')
+#%load_ext autotime
 
 
 # ## Directory Settings
 
-# In[2]:
+# In[6]:
 
 
 # ====================================================
@@ -34,7 +34,7 @@ if os.path.isfile('train.log'):
 
 # ## Data Loading
 
-# In[3]:
+# In[7]:
 
 
 import numpy as np
@@ -55,7 +55,7 @@ print(f'train.shape: {train.shape}')
 display(train.head())
 
 
-# In[4]:
+# In[ ]:
 
 
 class Tokenizer(object):
@@ -125,7 +125,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[5]:
+# In[ ]:
 
 
 # ====================================================
@@ -164,7 +164,7 @@ class CFG:
 print(f'Using {CFG.num_workers} workers.')
 
 
-# In[6]:
+# In[ ]:
 
 
 if CFG.debug:
@@ -174,7 +174,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[7]:
+# In[ ]:
 
 
 # ====================================================
@@ -245,7 +245,7 @@ if (cuda_available):
 
 # ## Utils
 
-# In[8]:
+# In[ ]:
 
 
 # ====================================================
@@ -289,7 +289,7 @@ seed_torch(seed=CFG.seed)
 
 # ## CV Split
 
-# In[9]:
+# In[ ]:
 
 
 folds = train.copy()
@@ -302,7 +302,7 @@ print(folds.groupby(['fold']).size())
 
 # ## Dataset
 
-# In[10]:
+# In[ ]:
 
 
 # ====================================================
@@ -354,7 +354,7 @@ class TestDataset(Dataset):
         return image
 
 
-# In[11]:
+# In[ ]:
 
 
 def bms_collate(batch):
@@ -369,7 +369,7 @@ def bms_collate(batch):
 
 # ## Transforms
 
-# In[12]:
+# In[ ]:
 
 
 def get_transforms(*, data):
@@ -395,7 +395,7 @@ def get_transforms(*, data):
         ])
 
 
-# In[13]:
+# In[ ]:
 
 
 from matplotlib import pyplot as plt
@@ -412,7 +412,7 @@ for i in range(1):
 
 # ## MODEL
 
-# In[14]:
+# In[ ]:
 
 
 class Encoder(nn.Module):
@@ -430,7 +430,7 @@ class Encoder(nn.Module):
         return features
 
 
-# In[15]:
+# In[ ]:
 
 
 class Attention(nn.Module):
@@ -576,7 +576,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Helper functions
 
-# In[16]:
+# In[ ]:
 
 
 # ====================================================
@@ -725,7 +725,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[17]:
+# In[ ]:
 
 
 # ====================================================
@@ -787,7 +787,7 @@ def train_loop(folds, fold):
     
     encoder = Encoder(CFG.model_name, pretrained=True)
     encoder.to(device)
-    encoder_optimizer = AdaBound(encoder.parameters(), lr=CFG.encoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
+    encoder_optimizer = AdaBound(encoder.parameters(), lr=CFG.encoder_lr, weight_decay=CFG.weight_decay)
     encoder_scheduler = get_scheduler(encoder_optimizer)
     
     LOGGER.info('Creating decoder ..')
@@ -799,8 +799,14 @@ def train_loop(folds, fold):
                                    dropout=CFG.dropout,
                                    device=device)
     decoder.to(device)
-    decoder_optimizer = AdaBound(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
+    decoder_optimizer = AdaBound(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay)
     decoder_scheduler = get_scheduler(decoder_optimizer)
+    
+    LOGGER.info(f'Multi-GPU available: {torch.distributed.is_available()}')
+    torch.distributed.init_process_group(backend='nccl', world_size=4)
+    LOGGER.info(f'Process group initialized: {torch.distributed.is_initialized()}')
+    encoder = torch.nn.parallel.DistributedDataParallel(encoder)
+    decoder = torch.nn.parallel.DistributedDataParallel(decoder)
 
     # ====================================================
     # loop
@@ -898,7 +904,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[18]:
+# In[ ]:
 
 
 # ====================================================

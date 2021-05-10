@@ -813,8 +813,8 @@ def train_loop(folds, fold):
     LOGGER.info(f'Multi-GPU available: {torch.distributed.is_available()}')
     torch.distributed.init_process_group(backend='nccl', world_size=torch.cuda.device_count())
     LOGGER.info(f'Process group initialized: {torch.distributed.is_initialized()}')
-    encoder = torch.nn.parallel.DistributedDataParallel(encoder)
-    decoder = torch.nn.parallel.DistributedDataParallel(decoder)
+    encoder = torch.nn.parallel.DistributedDataParallel(encoder, device_ids=[args.local_rank], output_device=args.local_rank)
+    decoder = torch.nn.parallel.DistributedDataParallel(decoder, device_ids=[args.local_rank], output_device=args.local_rank)
 
     # ====================================================
     # loop

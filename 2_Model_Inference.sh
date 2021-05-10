@@ -10,4 +10,4 @@
 module load python3 gcc/7.3.0 cuda
 
 # start the model
-ipython ./2_Model.py
+ipython ./2_Model.py && ipython ./3_Inference.py

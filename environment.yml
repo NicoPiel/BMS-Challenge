@@ -1,5 +1,7 @@
 name: bms
 channels:
+  - pytorch
+  - nvidia
   - conda-forge
   - anaconda
   - bioconda
@@ -17,6 +19,7 @@ dependencies:
   - backcall=0.2.0=pyh9f0ad1d_0
   - backports=1.0=py_2
   - backports.functools_lru_cache=1.6.4=pyhd8ed1ab_0
+  - blas=1.0=mkl
   - bleach=3.3.0=pyh44b312d_0
   - blosc=1.21.0=h9c3ff4c_0
   - brotli=1.0.9=h9c3ff4c_4
@@ -32,7 +35,7 @@ dependencies:
   - charls=2.2.0=h9c3ff4c_0
   - cloudpickle=1.6.0=py_0
   - cryptography=3.4.7=py39hbca0aa6_0
-  - cudatoolkit=10.1.243=h036e899_8
+  - cudatoolkit=11.1.74=h6bb024c_0
   - cycler=0.10.0=py_2
   - cytoolz=0.11.0=py39h3811e60_3
   - dask-core=2021.4.1=pyhd8ed1ab_0
@@ -120,6 +123,7 @@ dependencies:
   - libstdcxx-ng=9.3.0=h6de172a_19
   - libtiff=4.2.0=hdc55705_1
   - libuuid=2.32.1=h7f98852_1000
+  - libuv=1.41.0=h7f98852_0
   - libvorbis=1.3.7=h9c3ff4c_0
   - libwebp-base=1.2.0=h7f98852_2
   - libxcb=1.13=h7f98852_1003
@@ -185,7 +189,7 @@ dependencies:
   - python=3.9.2=hffdb5ce_0_cpython
   - python-dateutil=2.8.1=py_0
   - python_abi=3.9=1_cp39
-  - pytorch=1.8.0=cpu_py39h0fbb4fb_1
+  - pytorch=1.8.1=py3.9_cuda11.1_cudnn8.0.5_0
   - pytz=2021.1=pyhd8ed1ab_0
   - pywavelets=1.1.1=py39hce5d2b2_3
   - pyyaml=5.4.1=py39h3811e60_0
@@ -208,10 +212,12 @@ dependencies:
   - testpath=0.4.4=py_0
   - threadpoolctl=2.1.0=pyh5ca1d4c_0
   - tifffile=2021.4.8=pyhd8ed1ab_0
+  - timm=0.3.4=pyhd8ed1ab_0
   - tk=8.6.10=h21135ba_1
   - tomlkit=0.7.0=py39hf3d152e_3
   - toolz=0.11.1=py_0
-  - torchvision=0.9.0=py39h93e5132_0_cpu
+  - torchaudio=0.8.1=py39
+  - torchvision=0.2.2=py_3
   - tornado=6.1=py39h3811e60_1
   - tqdm=4.60.0=pyhd8ed1ab_0
   - traitlets=5.0.5=py_0

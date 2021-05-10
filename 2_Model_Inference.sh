@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu4
 #SBATCH --tasks=16
 #SBATCH --mem=200G
 #SBATCH --time=24:00:00
@@ -10,4 +10,4 @@
 module load python3 gcc/7.3.0 cuda
 
 # start the model
-ipython ./2_Model.py && ipython ./3_Inference.py
+python -m torch.distributed.launch --nproc_per_node=4 2_Model.py && python -m torch.distributed.launch --nproc_per_node=4 3_Inference.py

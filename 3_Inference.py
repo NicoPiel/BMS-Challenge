@@ -30,7 +30,7 @@ def get_test_file_path(image_id):
 test['file_path'] = test['image_id'].apply(get_test_file_path)
 
 print(f'test.shape: {test.shape}')
-display(test.head())
+print(test.head())
 
 
 # In[3]:

@@ -52,7 +52,7 @@ def get_train_file_path(image_id):
 train['file_path'] = train['image_id'].apply(get_train_file_path)
 
 print(f'train.shape: {train.shape}')
-display(train.head())
+print(train.head())
 
 
 # In[4]:
@@ -242,6 +242,13 @@ if (cuda_available):
     print(f'CUDA available: {cuda_available}')
     print(f'Number of available devices: {torch.cuda.device_count()}')
     print(f'Using device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
+    
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--local_rank", type=int)
+    args = parser.parse_args()
+    
+    torch.cuda.set_device(args.local_rank)
 
 
 # ## Utils
@@ -766,7 +773,7 @@ def train_loop(folds, fold):
                               pin_memory=True, 
                               drop_last=False)
     
-    display(valid_folds)
+    print(valid_folds)
     
     # ====================================================
     # scheduler 
@@ -804,7 +811,7 @@ def train_loop(folds, fold):
     decoder_scheduler = get_scheduler(decoder_optimizer)
     
     LOGGER.info(f'Multi-GPU available: {torch.distributed.is_available()}')
-    torch.distributed.init_process_group(backend='nccl', world_size=4)
+    torch.distributed.init_process_group(backend='nccl', world_size=torch.cuda.device_count())
     LOGGER.info(f'Process group initialized: {torch.distributed.is_initialized()}')
     encoder = torch.nn.parallel.DistributedDataParallel(encoder)
     decoder = torch.nn.parallel.DistributedDataParallel(decoder)

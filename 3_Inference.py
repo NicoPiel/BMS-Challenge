@@ -153,13 +153,6 @@ if (cuda_available):
     print(f'CUDA available: {cuda_available}')
     print(f'Number of available devices: {torch.cuda.device_count()}')
     print(f'Using device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
-    
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--local_rank", type=int)
-    args = parser.parse_args()
-    
-    torch.cuda.set_device(args.local_rank)
 
 
 # ## Utils
@@ -509,12 +502,6 @@ if __name__ == '__main__':
                                    device=device)
     decoder.load_state_dict(states['decoder'])
     decoder.to(device)
-    
-    LOGGER.info(f'Multi-GPU available: {torch.distributed.is_available()}')
-    torch.distributed.init_process_group(backend='nccl', world_size=torch.cuda.device_count())
-    LOGGER.info(f'Process group initialized: {torch.distributed.is_initialized()}')
-    encoder = torch.nn.parallel.DistributedDataParallel(encoder, device_ids=[args.local_rank], output_device=args.local_rank)
-    decoder = torch.nn.parallel.DistributedDataParallel(decoder, device_ids=[args.local_rank], output_device=args.local_rank)
 
     del states; gc.collect()
 

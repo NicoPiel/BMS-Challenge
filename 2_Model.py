@@ -3,7 +3,7 @@
 
 # # Model
 
-# In[1]:
+# In[8]:
 
 
 #%load_ext autotime
@@ -11,7 +11,7 @@
 
 # ## Directory Settings
 
-# In[2]:
+# In[9]:
 
 
 # ====================================================
@@ -27,14 +27,13 @@ PREPROCESS_DIR = 'input/inchi-preprocess'
 if not os.path.exists(PREPROCESS_DIR):
     os.makedirs(PREPROCESS_DIR)
     
-    
 if os.path.isfile('train.log'):
     os.remove('train.log')
 
 
 # ## Data Loading
 
-# In[3]:
+# In[10]:
 
 
 import numpy as np
@@ -46,7 +45,7 @@ train = pd.read_json(f'{PREPROCESS_DIR}/train.json')
 
 def get_train_file_path(image_id):
     return "input/train/{}/{}/{}/{}.png".format(
-        image_id[0], image_id[1], image_id[2], image_id 
+        image_id[0], image_id[1], image_id[2], image_id
     )
 
 train['file_path'] = train['image_id'].apply(get_train_file_path)
@@ -55,7 +54,7 @@ print(f'train.shape: {train.shape}')
 print(train.head())
 
 
-# In[4]:
+# In[11]:
 
 
 class Tokenizer(object):
@@ -125,7 +124,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[5]:
+# In[12]:
 
 
 # ====================================================
@@ -158,13 +157,13 @@ class CFG:
     dropout=0.5
     seed=42
     n_fold=5
-    trn_fold=[0] # [0, 1, 2, 3, 4]
+    trn_fold=[0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
     train=True
     
 print(f'Using {CFG.num_workers} workers.')
 
 
-# In[6]:
+# In[13]:
 
 
 if CFG.debug:
@@ -174,7 +173,7 @@ if CFG.debug:
 
 # ## Library
 
-# In[7]:
+# In[14]:
 
 
 # ====================================================
@@ -242,18 +241,11 @@ if (cuda_available):
     print(f'CUDA available: {cuda_available}')
     print(f'Number of available devices: {torch.cuda.device_count()}')
     print(f'Using device: {torch.cuda.get_device_name(torch.cuda.current_device())}')
-    
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--local_rank", type=int)
-    args = parser.parse_args()
-    
-    torch.cuda.set_device(args.local_rank)
 
 
 # ## Utils
 
-# In[8]:
+# In[15]:
 
 
 # ====================================================
@@ -297,7 +289,7 @@ seed_torch(seed=CFG.seed)
 
 # ## CV Split
 
-# In[9]:
+# In[16]:
 
 
 folds = train.copy()
@@ -310,7 +302,7 @@ print(folds.groupby(['fold']).size())
 
 # ## Dataset
 
-# In[10]:
+# In[17]:
 
 
 # ====================================================
@@ -362,7 +354,7 @@ class TestDataset(Dataset):
         return image
 
 
-# In[11]:
+# In[18]:
 
 
 def bms_collate(batch):
@@ -377,7 +369,7 @@ def bms_collate(batch):
 
 # ## Transforms
 
-# In[12]:
+# In[19]:
 
 
 def get_transforms(*, data):
@@ -403,7 +395,7 @@ def get_transforms(*, data):
         ])
 
 
-# In[13]:
+# In[20]:
 
 
 from matplotlib import pyplot as plt
@@ -415,12 +407,12 @@ for i in range(1):
     text = tokenizer.sequence_to_text(label.numpy())
     plt.imshow(image.transpose(0, 1).transpose(1, 2))
     plt.title(f'label: {label}  text: {text}  label_length: {label_length}')
-    plt.show() 
+    plt.show()
 
 
 # ## MODEL
 
-# In[14]:
+# In[21]:
 
 
 class Encoder(nn.Module):
@@ -438,7 +430,7 @@ class Encoder(nn.Module):
         return features
 
 
-# In[15]:
+# In[22]:
 
 
 class Attention(nn.Module):
@@ -584,7 +576,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Helper functions
 
-# In[16]:
+# In[23]:
 
 
 # ====================================================
@@ -733,7 +725,7 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[17]:
+# In[24]:
 
 
 # ====================================================
@@ -809,12 +801,6 @@ def train_loop(folds, fold):
     decoder.to(device)
     decoder_optimizer = AdaBound(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay)
     decoder_scheduler = get_scheduler(decoder_optimizer)
-    
-    LOGGER.info(f'Multi-GPU available: {torch.distributed.is_available()}')
-    torch.distributed.init_process_group(backend='nccl', world_size=torch.cuda.device_count())
-    LOGGER.info(f'Process group initialized: {torch.distributed.is_initialized()}')
-    encoder = torch.nn.parallel.DistributedDataParallel(encoder, device_ids=[args.local_rank], output_device=args.local_rank)
-    decoder = torch.nn.parallel.DistributedDataParallel(decoder, device_ids=[args.local_rank], output_device=args.local_rank)
 
     # ====================================================
     # loop
@@ -912,7 +898,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[18]:
+# In[25]:
 
 
 # ====================================================
@@ -935,7 +921,7 @@ def main():
                 train_loop(folds, fold)
 
 
-# In[19]:
+# In[ ]:
 
 
 if __name__ == '__main__':

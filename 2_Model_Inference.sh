@@ -2,7 +2,7 @@
 #SBATCH --partition=gpu
 #SBATCH --tasks=16
 #SBATCH --mem=180G
-#SBATCH --time=2:00:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --output=job.%j.out
 #SBATCH --error=job.%j.err
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=gpu
-#SBATCH --tasks=16
+#SBATCH --tasks=1
 #SBATCH --mem=180G
 #SBATCH --time=3-00:00:00
 #SBATCH --output=job.%j.out
@@ -10,4 +10,4 @@
 module load python3 gcc/7.3.0 cuda
 
 # start the model
-python 2_Model.py && python 3_Inference.py
+ipython 2_Model.py

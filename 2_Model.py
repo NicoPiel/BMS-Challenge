@@ -138,7 +138,7 @@ class CFG:
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
-    epochs=1 # not to exceed 9h
+    epochs=3 # not to exceed 9h
     #factor=0.2 # ReduceLROnPlateau
     #patience=4 # ReduceLROnPlateau
     #eps=1e-6 # ReduceLROnPlateau
@@ -156,8 +156,8 @@ class CFG:
     decoder_dim=512
     dropout=0.5
     seed=42
-    n_fold=5
-    trn_fold=[0, 1, 2, 3, 4] # [0, 1, 2, 3, 4]
+    n_fold=2
+    trn_fold=[0] # [0, 1, 2, 3, 4]
     train=True
     
 print(f'Using {CFG.num_workers} workers.')

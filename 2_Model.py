@@ -626,27 +626,27 @@ def train_fn(train_loader, encoder, decoder, criterion,
     decoder.train()
     start = end = time.time()
     global_step = 0
-    LOGGER.info('Enumerating train loader ..')
-    for step, (images, labels, label_lengths) in enumerate(train_loader):
+    #LOGGER.info('Enumerating train loader ..')
+    for step, (images, labels, label_lengths) in enumerate(tqdm(train_loader)):
         LOGGER.info(f'Step: {step}')
-        LOGGER.info('Training - Measuring data loading time ..')
+        #LOGGER.info('Training - Measuring data loading time ..')
         # measure data loading time
         data_time.update(time.time() - end)
-        LOGGER.info('Training - loading data ..')
+        #LOGGER.info('Training - loading data ..')
         images = images.to(device)
         labels = labels.to(device)
         label_lengths = label_lengths.to(device)
         batch_size = images.size(0)
-        LOGGER.info('Training - encoding ..')
+        #LOGGER.info('Training - encoding ..')
         features = encoder(images)
-        LOGGER.info('Training - decoding ..')
+        #LOGGER.info('Training - decoding ..')
         predictions, caps_sorted, decode_lengths, alphas, sort_ind = decoder(features, labels, label_lengths)
         targets = caps_sorted[:, 1:]
         predictions = pack_padded_sequence(predictions, decode_lengths, batch_first=True).data
         targets = pack_padded_sequence(targets, decode_lengths, batch_first=True).data
         loss = criterion(predictions, targets)
         # record loss
-        LOGGER.info('Training - recording ..')
+        #LOGGER.info('Training - recording ..')
         losses.update(loss.item(), batch_size)
         if CFG.gradient_accumulation_steps > 1:
             loss = loss / CFG.gradient_accumulation_steps
@@ -692,17 +692,17 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
     decoder.eval()
     text_preds = []
     start = end = time.time()
-    for step, (images) in enumerate(valid_loader):
+    for step, (images) in enumerate(tqdm(valid_loader)):
         LOGGER.info(f'Step: {step}')
         # measure data loading time
-        LOGGER.info('Evaluation - loading data ..')
+        #LOGGER.info('Evaluation - loading data ..')
         data_time.update(time.time() - end)
         images = images.to(device)
         batch_size = images.size(0)
         with torch.no_grad():
-            LOGGER.info('Evaluation - encoding ..')
+            #LOGGER.info('Evaluation - encoding ..')
             features = encoder(images)
-            LOGGER.info('Evaluation - decoding ..')
+            #LOGGER.info('Evaluation - decoding ..')
             predictions = decoder.predict(features, CFG.max_len, tokenizer)
         predicted_sequence = torch.argmax(predictions.detach().cpu(), -1).numpy()
         _text_preds = tokenizer.predict_captions(predicted_sequence)

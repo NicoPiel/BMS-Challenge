@@ -490,6 +490,7 @@ if __name__ == '__main__':
 
     states = torch.load(f'{CFG.model_name}_fold0_best.pth', map_location=torch.device('cpu'), pickle_module=dill)
 
+    
     encoder = Encoder(CFG.model_name, pretrained=False)
     encoder.load_state_dict(states['encoder'])
     encoder.to(device)

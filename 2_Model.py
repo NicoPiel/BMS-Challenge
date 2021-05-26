@@ -168,7 +168,7 @@ print(f'Using {CFG.num_workers} workers.')
 
 if CFG.debug:
     CFG.epochs = 1
-    train = train[:50000]
+    train = train[:10000]
 
 
 # ## Library
@@ -770,12 +770,6 @@ def train_loop(gpu, folds, fold, args):
         num_replicas=args.world_size,
         rank=rank
     )
-    
-    valid_sampler = torch.utils.data.distributed.DistributedSampler(
-        valid_dataset,
-        num_replicas=args.world_size,
-        rank=rank
-    )
 
     train_loader = DataLoader(train_dataset,
                               batch_size=CFG.batch_size, 
@@ -787,13 +781,10 @@ def train_loop(gpu, folds, fold, args):
                               sampler=train_sampler)
     valid_loader = DataLoader(valid_dataset, 
                               batch_size=CFG.batch_size, 
-                              #shuffle=False, 
+                              shuffle=False, 
                               num_workers=0,
                               pin_memory=True, 
-                              drop_last=False,
-                              sampler=valid_sampler)
-    
-    print(valid_folds)
+                              drop_last=False)
     
     # ====================================================
     # scheduler 
@@ -833,8 +824,6 @@ def train_loop(gpu, folds, fold, args):
     decoder.to(device)
     decoder_optimizer = Adam(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
     decoder_scheduler = get_scheduler(decoder_optimizer)
-    
-    decoder = DDP(decoder, device_ids=[gpu])
 
     # ====================================================
     # loop

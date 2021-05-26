@@ -3,7 +3,7 @@
 
 # # Model
 
-# In[8]:
+# In[2]:
 
 
 #%load_ext autotime
@@ -11,7 +11,7 @@
 
 # ## Directory Settings
 
-# In[9]:
+# In[3]:
 
 
 # ====================================================
@@ -27,13 +27,13 @@ PREPROCESS_DIR = 'input/inchi-preprocess'
 if not os.path.exists(PREPROCESS_DIR):
     os.makedirs(PREPROCESS_DIR)
     
-if os.path.isfile('train.log'):
-    os.remove('train.log')
+#if os.path.isfile('train.log'):
+#    os.remove('train.log')
 
 
 # ## Data Loading
 
-# In[10]:
+# In[4]:
 
 
 import numpy as np
@@ -54,7 +54,7 @@ print(f'train.shape: {train.shape}')
 print(train.head())
 
 
-# In[11]:
+# In[5]:
 
 
 class Tokenizer(object):
@@ -124,21 +124,21 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 
 # ## CFG
 
-# In[12]:
+# In[6]:
 
 
 # ====================================================
 # CFG
 # ====================================================
 class CFG:
-    debug=False
+    debug=True
     max_len=275
     print_freq=1000
     num_workers=16 if os.cpu_count() >= 16 else os.cpu_count()
     model_name='resnet34'
     size=224
     scheduler='CosineAnnealingLR' # ['ReduceLROnPlateau', 'CosineAnnealingLR', 'CosineAnnealingWarmRestarts']
-    epochs=6 # not to exceed 9h
+    epochs=8 # not to exceed 9h
     #factor=0.2 # ReduceLROnPlateau
     #patience=4 # ReduceLROnPlateau
     #eps=1e-6 # ReduceLROnPlateau
@@ -163,17 +163,17 @@ class CFG:
 print(f'Using {CFG.num_workers} workers.')
 
 
-# In[13]:
+# In[7]:
 
 
 if CFG.debug:
     CFG.epochs = 1
-    train = train[:100000]
+    train = train[:50000]
 
 
 # ## Library
 
-# In[14]:
+# In[8]:
 
 
 # ====================================================
@@ -190,6 +190,7 @@ import time
 import random
 import shutil
 import pickle
+import argparse
 from pathlib import Path
 from contextlib import contextmanager
 from collections import defaultdict, Counter
@@ -217,6 +218,9 @@ from torch.nn.parameter import Parameter
 from torch.utils.data import DataLoader, Dataset
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR, ReduceLROnPlateau
+import torch.multiprocessing as mp
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
 from adabound import AdaBound
 
 from albumentations import (
@@ -245,7 +249,7 @@ if (cuda_available):
 
 # ## Utils
 
-# In[15]:
+# In[9]:
 
 
 # ====================================================
@@ -267,10 +271,10 @@ def init_logger(log_file=OUTPUT_DIR+'train.log'):
     logger.setLevel(INFO)
     handler1 = StreamHandler()
     handler1.setFormatter(Formatter("%(message)s"))
-    handler2 = FileHandler(filename=log_file)
-    handler2.setFormatter(Formatter("%(message)s"))
+    #handler2 = FileHandler(filename=log_file)
+    #handler2.setFormatter(Formatter("%(message)s"))
     logger.addHandler(handler1)
-    logger.addHandler(handler2)
+    #logger.addHandler(handler2)
     return logger
 
 LOGGER = init_logger()
@@ -289,7 +293,7 @@ seed_torch(seed=CFG.seed)
 
 # ## CV Split
 
-# In[16]:
+# In[10]:
 
 
 folds = train.copy()
@@ -302,7 +306,7 @@ print(folds.groupby(['fold']).size())
 
 # ## Dataset
 
-# In[17]:
+# In[11]:
 
 
 # ====================================================
@@ -354,7 +358,7 @@ class TestDataset(Dataset):
         return image
 
 
-# In[18]:
+# In[12]:
 
 
 def bms_collate(batch):
@@ -369,7 +373,7 @@ def bms_collate(batch):
 
 # ## Transforms
 
-# In[19]:
+# In[13]:
 
 
 def get_transforms(*, data):
@@ -395,7 +399,7 @@ def get_transforms(*, data):
         ])
 
 
-# In[20]:
+# In[14]:
 
 
 from matplotlib import pyplot as plt
@@ -405,14 +409,14 @@ train_dataset = TrainDataset(train, tokenizer, transform=get_transforms(data='tr
 for i in range(1):
     image, label, label_length = train_dataset[i]
     text = tokenizer.sequence_to_text(label.numpy())
-    plt.imshow(image.transpose(0, 1).transpose(1, 2))
+    #plt.imshow(image.transpose(0, 1).transpose(1, 2))
     plt.title(f'label: {label}  text: {text}  label_length: {label_length}')
     plt.show()
 
 
 # ## MODEL
 
-# In[21]:
+# In[15]:
 
 
 class Encoder(nn.Module):
@@ -430,7 +434,7 @@ class Encoder(nn.Module):
         return features
 
 
-# In[22]:
+# In[16]:
 
 
 class Attention(nn.Module):
@@ -576,7 +580,7 @@ class DecoderWithAttention(nn.Module):
 
 # ## Helper functions
 
-# In[23]:
+# In[17]:
 
 
 # ====================================================
@@ -725,15 +729,25 @@ def valid_fn(valid_loader, encoder, decoder, tokenizer, criterion, device):
 
 # ## Train loop
 
-# In[24]:
+# In[18]:
 
 
 # ====================================================
 # Train loop
 # ====================================================
-def train_loop(folds, fold):
+def train_loop(gpu, folds, fold, args):
 
     LOGGER.info(f"========== fold: {fold} training ==========")
+    
+    LOGGER.info('Initializing process group ..')
+    
+    rank = args.nr * args.gpus + gpu                       
+    dist.init_process_group(                                   
+        backend='nccl',                                         
+        init_method='env://',                                   
+        world_size=args.world_size,                              
+        rank=rank                                               
+    )  
 
     # ====================================================
     # loader
@@ -750,20 +764,34 @@ def train_loop(folds, fold):
 
     train_dataset = TrainDataset(train_folds, tokenizer, transform=get_transforms(data='train'))
     valid_dataset = TestDataset(valid_folds, transform=get_transforms(data='valid'))
+    
+    train_sampler = torch.utils.data.distributed.DistributedSampler(
+        train_dataset,
+        num_replicas=args.world_size,
+        rank=rank
+    )
+    
+    valid_sampler = torch.utils.data.distributed.DistributedSampler(
+        valid_dataset,
+        num_replicas=args.world_size,
+        rank=rank
+    )
 
-    train_loader = DataLoader(train_dataset, 
+    train_loader = DataLoader(train_dataset,
                               batch_size=CFG.batch_size, 
                               shuffle=True, 
-                              num_workers=CFG.num_workers, 
+                              num_workers=0, 
                               pin_memory=True,
-                              drop_last=True, 
-                              collate_fn=bms_collate)
+                              drop_last=True,
+                              collate_fn=bms_collate, 
+                              sampler=train_sampler)
     valid_loader = DataLoader(valid_dataset, 
                               batch_size=CFG.batch_size, 
                               shuffle=False, 
-                              num_workers=CFG.num_workers,
+                              num_workers=0,
                               pin_memory=True, 
-                              drop_last=False)
+                              drop_last=False,
+                              sampler=valid_sampler)
     
     print(valid_folds)
     
@@ -783,12 +811,16 @@ def train_loop(folds, fold):
     # model & optimizer
     # ====================================================
     
+    torch.cuda.set_device(gpu)
+    
     LOGGER.info('Creating encoder ..')
     
     encoder = Encoder(CFG.model_name, pretrained=True)
     encoder.to(device)
     encoder_optimizer = Adam(encoder.parameters(), lr=CFG.encoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
     encoder_scheduler = get_scheduler(encoder_optimizer)
+    
+    encoder = DDP(encoder, device_ids=[gpu])
     
     LOGGER.info('Creating decoder ..')
     
@@ -801,11 +833,13 @@ def train_loop(folds, fold):
     decoder.to(device)
     decoder_optimizer = Adam(decoder.parameters(), lr=CFG.decoder_lr, weight_decay=CFG.weight_decay, amsgrad=False)
     decoder_scheduler = get_scheduler(decoder_optimizer)
+    
+    decoder = DDP(decoder, device_ids=[gpu])
 
     # ====================================================
     # loop
     # ====================================================
-    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.stoi["<pad>"])
+    criterion = nn.CrossEntropyLoss(ignore_index=tokenizer.stoi["<pad>"]).cuda(gpu)
 
     best_score = np.inf
     best_loss = np.inf
@@ -898,7 +932,7 @@ def train_loop(folds, fold):
 
 # ## Main
 
-# In[25]:
+# In[19]:
 
 
 # ====================================================
@@ -918,10 +952,20 @@ def main():
         oof_df = pd.DataFrame()
         for fold in range(CFG.n_fold):
             if fold in CFG.trn_fold:
-                train_loop(folds, fold)
+                parser = argparse.ArgumentParser()
+                parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N')
+                parser.add_argument('-g', '--gpus', default=1, type=int, help='number of gpus per node')
+                parser.add_argument('-nr', '--nr', default=0, type=int, help='ranking within the nodes')
+                parser.add_argument('--epochs', default=2, type=int, metavar='N', help='number of total epochs to run')
+                args = parser.parse_args()
+                
+                args.world_size = args.gpus * args.nodes
+                os.environ['MASTER_ADDR'] = '127.0.0.1'
+                os.environ['MASTER_PORT'] = '8888'
+                mp.spawn(train_loop, nprocs=args.gpus, args=(folds, fold, args,))
 
 
-# In[ ]:
+# In[20]:
 
 
 if __name__ == '__main__':

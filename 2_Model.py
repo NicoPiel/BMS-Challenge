@@ -779,7 +779,7 @@ def train_loop(gpu, folds, fold, args):
 
     train_loader = DataLoader(train_dataset,
                               batch_size=CFG.batch_size, 
-                              shuffle=True, 
+                              #shuffle=True, 
                               num_workers=0, 
                               pin_memory=True,
                               drop_last=True,
@@ -787,7 +787,7 @@ def train_loop(gpu, folds, fold, args):
                               sampler=train_sampler)
     valid_loader = DataLoader(valid_dataset, 
                               batch_size=CFG.batch_size, 
-                              shuffle=False, 
+                              #shuffle=False, 
                               num_workers=0,
                               pin_memory=True, 
                               drop_last=False,

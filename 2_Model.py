@@ -131,7 +131,7 @@ print(f"tokenizer.stoi: {tokenizer.stoi}")
 # CFG
 # ====================================================
 class CFG:
-    debug=True
+    debug=False
     max_len=275
     print_freq=1000
     num_workers=16 if os.cpu_count() >= 16 else os.cpu_count()
